@@ -1,0 +1,13 @@
+Guarda el archivo y ejecútalo:
+
+python inventario_archivos.py → menú de gestión.
+
+python inventario_archivos.py --test → corre pruebas (archivo inexistente, líneas corruptas, permisos).
+
+Notas:
+
+Persiste en inventario.txt (JSONL).
+
+Escritura atómica con .tmp + os.replace.
+
+Maneja FileNotFoundError, PermissionError, JSONDecodeError y más, con mensajes claros.

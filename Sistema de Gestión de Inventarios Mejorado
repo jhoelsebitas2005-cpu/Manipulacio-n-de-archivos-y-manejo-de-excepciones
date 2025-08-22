@@ -1,0 +1,80 @@
+from __future__ import annotations
+break
+else:
+print("Opción inválida")
+
+
+
+
+# -----------------------------
+# Pruebas (básicas pero útiles)
+# -----------------------------
+
+
+def pruebas_exhaustivas() -> None:
+"""Ejecuta pruebas que validan:
+- Creación y carga sin archivo previo.
+- Manejo de línea corrupta.
+- Permisos restringidos (cuando el SO lo permite).
+- Escritura atómica y consistencia.
+"""
+import tempfile
+import shutil
+import stat
+
+
+base = tempfile.mkdtemp(prefix="invtest_")
+ruta = os.path.join(base, "inventario.txt")
+print(f"[TEST] Carpeta temporal: {base}")
+
+
+try:
+# 1) Crear inventario sin archivo previo
+inv = Inventario(ruta)
+assert len(inv.listar_productos()) == 0
+ok, msg = inv.agregar_producto(Producto("P1", "Lapicero", 5, 0.5))
+assert ok, msg
+assert inv.buscar_producto("P1") is not None
+
+
+# 2) Simular línea corrupta y recarga parcial
+with open(ruta, "a", encoding="utf-8") as f:
+f.write("{esto no es json}\n")
+inv2 = Inventario(ruta)
+cargados, corruptos = inv2.cargar_desde_archivo()
+assert cargados == 1 and corruptos == 1
+
+
+# 3) Escritura atómica: muchas actualizaciones
+for i in range(100):
+ok, msg = inv2.actualizar_producto("P1", cantidad=5 + i)
+assert ok, msg
+p = inv2.buscar_producto("P1")
+assert p and p.cantidad == 104
+
+
+# 4) Probar permisos de solo-lectura (si el SO lo soporta)
+try:
+os.chmod(ruta, stat.S_IREAD)
+ok, msg = inv2.agregar_producto(Producto("P2", "Cuaderno", 2, 1.5))
+assert not ok and "Permiso" in msg
+finally:
+# Restaurar permisos para limpieza
+os.chmod(ruta, stat.S_IWRITE | stat.S_IREAD)
+
+
+print("[TEST] Todas las pruebas pasaron ✅")
+finally:
+# Limpieza
+shutil.rmtree(base, ignore_errors=True)
+
+
+
+
+if __name__ == "__main__":
+if "--test" in sys.argv:
+pruebas_exhaustivas()
+else:
+# Se puede pasar una ruta personalizada como argumento 1
+ruta = sys.argv[1] if len(sys.argv) > 1 else "inventario.txt"
+menu_principal(ruta)
